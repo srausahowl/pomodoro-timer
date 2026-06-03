@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Pomodoro Timer</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{text-align:center;max-width:400px;width:90%}h1{font-size:28px;margin-bottom:32px}
+.modes{display:flex;gap:8px;justify-content:center;margin-bottom:40px;background:#1e293b;padding:4px;border-radius:12px}
+.mode{padding:10px 20px;border:none;background:transparent;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s}
+.mode.active{background:#ef4444;color:#fff}.mode:hover:not(.active){color:#e2e8f0}
+.timer-ring{position:relative;width:280px;height:280px;margin:0 auto 40px}.timer-ring svg{transform:rotate(-90deg)}.timer-ring circle{fill:none;stroke-width:6}
+.timer-ring .bg{stroke:#334155}.timer-ring .fg{stroke:#ef4444;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.time-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:64px;font-weight:800;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:16px;justify-content:center;margin-bottom:40px}
+.btn{padding:14px 32px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(0.96)}.btn-primary{background:#ef4444;color:#fff}.btn-secondary{background:#334155;color:#e2e8f0}
+.stats{display:flex;gap:24px;justify-content:center;margin-bottom:20px}.stat{text-align:center}.stat .val{font-size:32px;font-weight:700;color:#ef4444}.stat .label{font-size:12px;color:#94a3b8;text-transform:uppercase;margin-top:4px}
+.sessions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.session{width:24px;height:24px;border-radius:50%;background:#334155;border:2px solid #475569}.session.done{background:#ef4444;border-color:#ef4444}
+</style></head><body><div class="container"><h1>Pomodoro Timer</h1>
+<div class="modes"><button class="mode active" onclick="setMode(25,'work',event)">Focus</button><button class="mode" onclick="setMode(5,'short',event)">Short Break</button><button class="mode" onclick="setMode(15,'long',event)">Long Break</button></div>
+<div class="timer-ring"><svg viewBox="0 0 280 280" width="280" height="280"><circle class="bg" cx="140" cy="140" r="130"/><circle class="fg" id="ring" cx="140" cy="140" r="130" stroke-dasharray="817" stroke-dashoffset="0"/></svg><div class="time-display" id="display">25:00</div></div>
+<div class="controls"><button class="btn btn-primary" id="startBtn" onclick="toggle()">Start</button><button class="btn btn-secondary" onclick="reset()">Reset</button></div>
+<div class="stats"><div class="stat"><div class="val" id="count">0</div><div class="label">Sessions</div></div><div class="stat"><div class="val" id="totalTime">0m</div><div class="label">Focus Time</div></div></div>
+<div class="sessions" id="dots"></div></div>
+<script>
+let TOTAL=1500,left=TOTAL,running=false,interval=null,sessions=0,mode="work",focusSec=0;
+const C=2*Math.PI*130;
+function setMode(m,md,e){mode=md;TOTAL=m*60;left=TOTAL;running=false;clearInterval(interval);document.getElementById("startBtn").textContent="Start";document.querySelectorAll(".mode").forEach(b=>b.classList.remove("active"));e.target.classList.add("active");render()}
+function toggle(){if(running){running=false;clearInterval(interval);document.getElementById("startBtn").textContent="Resume"}else{running=true;interval=setInterval(tick,1000);document.getElementById("startBtn").textContent="Pause"}}
+function reset(){running=false;clearInterval(interval);left=TOTAL;document.getElementById("startBtn").textContent="Start";render()}
+function tick(){left--;if(mode==="work")focusSec++;if(left<=0){left=0;running=false;clearInterval(interval);document.getElementById("startBtn").textContent="Start";if(mode==="work"){sessions++;updateDots()}playBeep()}render()}
+function render(){const m=Math.floor(left/60),s=left%60;document.getElementById("display").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");document.title=document.getElementById("display").textContent+" - Pomodoro";const pct=1-left/TOTAL;document.getElementById("ring").style.strokeDashoffset=C*pct;document.getElementById("count").textContent=sessions;const hm=Math.floor(focusSec/3600),mm=Math.floor((focusSec%3600)/60);document.getElementById("totalTime").textContent=hm?hm+"h "+mm+"m":mm+"m"}
+function updateDots(){const d=document.getElementById("dots");d.innerHTML="";for(let i=0;i<Math.min(sessions,20);i++){const dot=document.createElement("div");dot.className="session done";d.appendChild(dot)}}
+function playBeep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=800;g.gain.value=0.3;o.start();o.stop(a.currentTime+0.5)}catch(e){}}
+render()
+</script></body></html>
